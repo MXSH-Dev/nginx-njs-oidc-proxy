@@ -3,10 +3,13 @@ version: '3'
 services:
 
   backend:
-    build: backend
-    working_dir: /srv
-    volumes:
-      - ./backend/index.php:/srv/index.php:ro
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    image: python-flask
+    container_name: python-flask-demo
+    ports:
+      - "9999:9999"
 
   nginx:
     build: nginx
@@ -14,4 +17,23 @@ services:
       - 80:80
     volumes:
       - ./nginx/js:/etc/nginx/js:ro
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+  rabbitmq3:
+    build:
+      context: ./bitrmq
+      dockerfile: Dockerfile
+    image: rabbitmq:3.8.22-debian-10-r11-develop-UID1000760000
+    # container_name: rabbitmq-3.8.22-debian-10-r11-develop-UID1000760000
+    environment:
+      RABBITMQ_ERL_COOKIE: "secret-cookie-here"
+      RABBITMQ_USERNAME: "admin"
+      RABBITMQ_PASSWORD: "hello"
+      RABBITMQ_PLUGINS: "rabbitmq_management, rabbitmq_auth_backend_oauth2, rabbitmq_auth_backend_internal"
+    # volumes:
+      # - rabbit_data:/bitnami/rabbitmq/mnesia
+      # - ./rbmqmg/adv.config:/bitnami/rabbitmq/conf/advanced.config
+      # - ./rbmqmg/rabbit.conf:/bitnami/rabbitmq/conf/rabbitmq.conf
+    ports:
+      - 15672:15672
+      - 5672:5672

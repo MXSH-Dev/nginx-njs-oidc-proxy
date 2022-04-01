@@ -1,6 +1,11 @@
-FROM alpine:edge
+FROM python:alpine3.9
 
-RUN apk add --no-cache php
+WORKDIR /app
 
-ENTRYPOINT ["php"]
-CMD ["-S", "0.0.0.0:80"]
+COPY requirements.txt /app
+
+RUN pip install -r requirements.txt
+
+COPY . /app
+
+CMD [ "python","app.py" ]
