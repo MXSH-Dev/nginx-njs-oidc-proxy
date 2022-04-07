@@ -15,6 +15,7 @@ services:
     build: nginx
     ports:
       - 80:80
+    tty: true
     volumes:
       - ./nginx/js:/etc/nginx/js:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf

@@ -69,6 +69,19 @@ var callbackHandler = baseHandler(r => {
 var authHandler = ruleFn => baseHandler(r => {
 	var claims;
 
+	r.log("After Claims");
+	r.log(r.variables["query_string"]);
+	r.log(r.variables["request_id"]);
+	r.log(r.variables["scheme"]);
+	r.log(r.variables["host"]);
+	r.log(r.variables["request_uri"]);
+	r.log("Before Try Claims");
+	r.log("SOME TESTS");
+	r.log(decodeURIComponent(r.variables["arg_code"]));
+	r.log(r.variables["arg_code"]);
+	r.log(r.variables["arg_query_string"]);
+	r.log("END TESTS");
+
 	try {
 		claims = lib.cookie.get(r);
 		if (!("email" in claims)) {
