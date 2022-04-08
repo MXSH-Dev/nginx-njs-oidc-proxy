@@ -36,7 +36,8 @@ var callbackHandler = baseHandler(r => {
 		client_id: lib.oauthClient.getId(),
 		client_secret: lib.oauthClient.getSecret(),
 		grant_type: "authorization_code",
-		redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
+		// redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
+		redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}:8080/oauth2/callback`,
 	};
 	r.subrequest("/oauth2/internal/token", {method: "POST", body: JSON.stringify(query)}, sr => {
 		if (sr.status !== 200) {
@@ -60,6 +61,8 @@ var callbackHandler = baseHandler(r => {
 			user: claims.email.split("@").shift(),
 			email: claims.email,
 		});
+		r.log("Context Redirect");
+		r.log(context.redirect);
 		r.return(302, context.redirect);
 	});
 });
@@ -94,14 +97,22 @@ var authHandler = ruleFn => baseHandler(r => {
 			state: reqId,
 			redirect: r.variables["request_uri"],
 		});
+		
+		// r.log("request_uri:")
+		// r.log(r.variables["request_uri"])
+		// r.return(302, `http://localhost:80`);
+		// return;
 
 		var query = {
 			client_id: lib.oauthClient.getId(),
-			redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
+			// redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
+			redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}:8080/oauth2/callback`,
 			response_type: "code",
 			scope: "openid email",
 			state: reqId,
 		};
+		r.log(query.redirect_uri)
+		r.log("================")
 		r.return(302, `https://accounts.google.com/o/oauth2/v2/auth?${lib.query.stringify(query)}`);
 
 		r.log(`[authHandler] Redirected: error=${e}`);
