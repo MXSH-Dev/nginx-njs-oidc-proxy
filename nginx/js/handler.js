@@ -4,8 +4,9 @@ import baseHandler from "js/baseHandler.js";
 var callbackHandler = baseHandler.callback;
 
 var everyoneAuthHandler = baseHandler.auth(email => {
-	var domain = email.split("@").pop();
-	return acl.everyoneDomains.some(allowed => allowed === domain);
+	// var domain = email.split("@").pop();
+	// return acl.everyoneDomains.some(allowed => allowed === domain);
+	return true;
 });
 
 var employeeAuthHandler = baseHandler.auth(email => {
