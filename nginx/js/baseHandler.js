@@ -64,65 +64,118 @@ var callbackHandler = baseHandler(r => {
 	});
 });
 
+var callback3_hit =0;
+var callbackHandler3 = baseHandler(r => {
+
+	callback3_hit = callback3_hit+1;
+
+	r.log(`Hit callback3, count ${callback3_hit} ###############`)
+
+	// Exchange code with ID token.
+	// var query = {
+	// 	// code: decodeURIComponent(r.variables["arg_code"]),
+	// 	code: r.variables["arg_code"],
+	// 	client_id: lib.oauthClient.getId(),
+	// 	client_secret: lib.oauthClient.getSecret(),
+	// 	grant_type: "authorization_code",
+	// 	redirect_uri: "http://localhost/oauth3/callback",
+	// };
+
+	var query = {
+		client_id: lib.oauthClient.getId(),
+		client_secret: lib.oauthClient.getSecret(),
+		grant_type: "client_credentials",
+	};
+
+	r.log(JSON.stringify(query))
+
+	var token_request_body_string = lib.query.stringify(query)
+
+	r.log(`###### ${token_request_body_string} #####`)
+	r.subrequest("/oauth3/internal/token", {method: "POST", body: token_request_body_string}, sr => {
+		// if (sr.status !== 200) {
+		// 	throw new Error(`failed to fetch token: status=${sr.status}, resp=${sr.responseBody}`);
+		// }
+
+		// Parse ID token, which is encoded with JWT.
+		var resp = JSON.parse(sr.responseBody);
+
+		r.log(sr.responseBody)
+
+		r.return(302, "http://localhost:9999");
+	});
+});
+
 // `authHandler` is higher-order function, which receives `ruleFn`(function) that determines permissions,
 // and returns a handler which blocks unauthorized users and redirect them to OpenID provider.
 var authHandler = ruleFn => baseHandler(r => {
 	var claims;
 
-	r.log("After Claims");
-	r.log(r.variables["query_string"]);
-	r.log(r.variables["request_id"]);
-	r.log(r.variables["scheme"]);
-	r.log(r.variables["host"]);
-	r.log(r.variables["request_uri"]);
-	r.log("Before Try Claims");
-	r.log("SOME TESTS");
-	r.log(decodeURIComponent(r.variables["arg_code"]));
-	r.log(r.variables["arg_code"]);
-	r.log(r.variables["arg_query_string"]);
-	r.log("END TESTS");
+	// r.log("After Claims");
+	// r.log(r.variables["query_string"]);
+	// r.log(r.variables["request_id"]);
+	// r.log(r.variables["scheme"]);
+	// r.log(r.variables["host"]);
+	// r.log(r.variables["request_uri"]);
+	// r.log("Before Try Claims");
+	// r.log("SOME TESTS");
+	// r.log(decodeURIComponent(r.variables["arg_code"]));
+	// r.log(r.variables["arg_code"]);
+	// r.log(r.variables["arg_query_string"]);
+	// r.log("END TESTS");
 
-	try {
-		claims = lib.cookie.get(r);
-		if (!("email" in claims)) {
-			throw new Error("not authorized yet");
-		}
-	} catch(e) {
-		// Store `state` into cookie, which will be confirmed on oauth-callback endpoint.
-		var reqId = r.variables["request_id"];
-		lib.cookie.set(r, {
-			state: reqId,
-			redirect: r.variables["request_uri"],
-		});
+	var query = {
+		client_id: lib.oauthClient.getId(),
+		redirect_uri: "http://localhost/oauth3/callback",
+		response_type: "code",
+	};
 
-		var query = {
-			client_id: lib.oauthClient.getId(),
-			redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
-			response_type: "code",
-			scope: "openid email",
-			state: reqId,
-		};
-		r.return(302, `https://accounts.google.com/o/oauth2/v2/auth?${lib.query.stringify(query)}`);
+	r.log(JSON.stringify(query))
 
-		r.log(`[authHandler] Redirected: error=${e}`);
-		return;
-	}
+	r.return(302, `https://auth.ocp01.toll6.tinaa.tlabs.ca/auth/realms/tinaa/protocol/openid-connect/auth?${lib.query.stringify(query)}`);
+
+	// try {
+	// 	claims = lib.cookie.get(r);
+	// 	if (!("email" in claims)) {
+	// 		throw new Error("not authorized yet");
+	// 	}
+	// } catch(e) {
+	// 	// Store `state` into cookie, which will be confirmed on oauth-callback endpoint.
+	// 	var reqId = r.variables["request_id"];
+	// 	lib.cookie.set(r, {
+	// 		state: reqId,
+	// 		redirect: r.variables["request_uri"],
+	// 	});
+
+	// 	var query = {
+	// 		client_id: lib.oauthClient.getId(),
+	// 		redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
+	// 		response_type: "code",
+	// 		scope: "openid email",
+	// 		state: reqId,
+	// 	};
+	// 	r.return(302, `https://accounts.google.com/o/oauth2/v2/auth?${lib.query.stringify(query)}`);
+
+	// 	r.log(`[authHandler] Redirected: error=${e}`);
+	// 	return;
+	// }
 
 	// Check the user can access this application.
-	if (!ruleFn(claims.email)) {
-		printError(r, 403, `You cannot access this application. Email: ${claims.email}`);
-		return;
-	}
+	// if (!ruleFn(claims.email)) {
+	// 	printError(r, 403, `You cannot access this application. Email: ${claims.email}`);
+	// 	return;
+	// }
 
-	// These variables below can read in nginx-configuration.
-	r.variables["oidc_user"] = claims.user;
-	r.variables["oidc_email"] = claims.email;
-	r.variables["oidc_basic_auth"] = `${claims.user}:`.toUTF8().toString("base64");
+	// // These variables below can read in nginx-configuration.
+	// r.variables["oidc_user"] = claims.user;
+	// r.variables["oidc_email"] = claims.email;
+	// r.variables["oidc_basic_auth"] = `${claims.user}:`.toUTF8().toString("base64");
 
-	r.internalRedirect("@upstream");
+	// r.internalRedirect("@upstream");
 });
 
 export default {
 	auth: authHandler,
 	callback: callbackHandler,
+	callback3: callbackHandler3,
 };
