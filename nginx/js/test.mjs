@@ -2,11 +2,13 @@ import crypto from "crypto";
 
 var sign = data => crypto.createHmac("sha256", "IamSomeCookieSecret").update(data).digest("base64url");
 
-var my_data = sign("hello");
+// var sign = data => crypto.createHmac("sha256", "IamSomeCookieSecret").update(data).digest("base64");
 
-console.log(my_data)
+// var my_data = sign("hello");
 
-var cookie = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE2NDkxOTYwNjQsImV4cCI6MTY0OTgwMDg2NCwidXNlciI6Im1pY2hhZWx4aW5ndGVsdXMiLCJlbWFpbCI6Im1pY2hhZWx4aW5ndGVsdXNAZ21haWwuY29tIn0.BtaAKlG5rlccO5v0crTzutRBK_EFkPLDTZe4_3EeX3E"
+// console.log(my_data)
+
+// var cookie = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE2NDkxOTYwNjQsImV4cCI6MTY0OTgwMDg2NCwidXNlciI6Im1pY2hhZWx4aW5ndGVsdXMiLCJlbWFpbCI6Im1pY2hhZWx4aW5ndGVsdXNAZ21haWwuY29tIn0.BtaAKlG5rlccO5v0crTzutRBK_EFkPLDTZe4_3EeX3E"
 
 var verifySignedCookie = signedCookie => {
 	var fragments = signedCookie.split(".");
@@ -38,11 +40,11 @@ var verifySignedCookie = signedCookie => {
 	return claims;
 };
 
-var my_claims = verifySignedCookie(cookie)
+// var my_claims = verifySignedCookie(cookie)
 
-console.log(my_claims)
+// console.log(my_claims)
 
-console.log("****************************************************************")
+console.log("**************************** createSignedCookie ************************************")
 
 var createSignedCookie = data => {
 	var header = {
@@ -50,9 +52,13 @@ var createSignedCookie = data => {
 		typ: "JWT",
 	};
 
-	var now = Math.floor(new Date().getTime() / 1000);
+	// var now = Math.floor(new Date().getTime() / 1000);
+
+	// console.log(now)
+
+	var now = 1649584711
 	var claims = Object.assign({
-		nbf: now,
+		// nbf: now,
 		exp: now,
 	}, data);
 
@@ -60,19 +66,37 @@ var createSignedCookie = data => {
 
     var fragments = [header, claims].map(e => btoa(JSON.stringify(e)));
 
+	// console.log(fragments,"---1")
     // var fragments = [header, claims].map(e => JSON.stringify(e).toBytes().toString('base64'));
 
 	fragments.push(sign(fragments.join(".")));
 
+	// console.log(fragments,"---2")
+
 	return fragments.join(".");
 };
 
-var my_new_cookie = createSignedCookie({"hello":"world"})
+// var my_new_cookie = createSignedCookie({"hello":"https://world"})
 
-console.log(my_new_cookie)
+// console.log(my_new_cookie)
 
-console.log("****************************************************************")
+// console.log("****************************************************************")
 
-var my_claims2 = verifySignedCookie(my_new_cookie)
+// var my_claims2 = verifySignedCookie(my_new_cookie)
 
-console.log(my_claims2)
+// console.log(my_claims2)
+
+
+console.log("############## test self encode decode #####################")
+var secret = 'PYPd1Hv4J6';
+// var message = '1515928475.417'
+
+// var message = JSON.stringify({hello:"world"})
+
+var message = "hello=world&hi"
+console.log(message)
+var hmac = crypto.createHmac('sha256', secret);
+var hmac_result = hmac.update(message).digest('base64');
+console.log(hmac_result)
+
+
