@@ -38,7 +38,7 @@ var callbackHandler = baseHandler(r => {
 		grant_type: "authorization_code",
 		redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
 	};
-	r.subrequest("/oauth2/internal/token", {method: "POST", body: JSON.stringify(query)}, sr => {
+	r.subrequest("/google/token", {method: "POST", body: JSON.stringify(query)}, sr => {
 		if (sr.status !== 200) {
 			throw new Error(`failed to fetch token: status=${sr.status}, resp=${sr.responseBody}`);
 		}
@@ -136,54 +136,54 @@ var authHandler = ruleFn => baseHandler(r => {
 	// r.log(r.variables["arg_query_string"]);
 	// r.log("END TESTS");
 
-	var query = {
-		client_id: lib.oauthClient.getId(),
-		redirect_uri: "http://localhost/oauth3/callback",
-		response_type: "code",
-	};
+	// var query = {
+	// 	client_id: lib.oauthClient.getId(),
+	// 	redirect_uri: "http://localhost/oauth3/callback",
+	// 	response_type: "code",
+	// };
 
-	r.log(JSON.stringify(query))
+	// r.log(JSON.stringify(query))
 
-	r.return(302, `https://auth.ocp01.toll6.tinaa.tlabs.ca/auth/realms/tinaa/protocol/openid-connect/auth?${lib.query.stringify(query)}`);
+	// r.return(302, `https://auth.ocp01.toll6.tinaa.tlabs.ca/auth/realms/tinaa/protocol/openid-connect/auth?${lib.query.stringify(query)}`);
 
-	// try {
-	// 	claims = lib.cookie.get(r);
-	// 	if (!("email" in claims)) {
-	// 		throw new Error("not authorized yet");
-	// 	}
-	// } catch(e) {
-	// 	// Store `state` into cookie, which will be confirmed on oauth-callback endpoint.
-	// 	var reqId = r.variables["request_id"];
-	// 	lib.cookie.set(r, {
-	// 		state: reqId,
-	// 		redirect: r.variables["request_uri"],
-	// 	});
+	try {
+		claims = lib.cookie.get(r);
+		if (!("email" in claims)) {
+			throw new Error("not authorized yet");
+		}
+	} catch(e) {
+		// Store `state` into cookie, which will be confirmed on oauth-callback endpoint.
+		var reqId = r.variables["request_id"];
+		lib.cookie.set(r, {
+			state: reqId,
+			redirect: r.variables["request_uri"],
+		});
 
-	// 	var query = {
-	// 		client_id: lib.oauthClient.getId(),
-	// 		redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
-	// 		response_type: "code",
-	// 		scope: "openid email",
-	// 		state: reqId,
-	// 	};
-	// 	r.return(302, `https://accounts.google.com/o/oauth2/v2/auth?${lib.query.stringify(query)}`);
+		var query = {
+			client_id: lib.oauthClient.getId(),
+			redirect_uri: `${r.variables["scheme"]}://${r.variables["host"]}/oauth2/callback`,
+			response_type: "code",
+			scope: "openid email",
+			state: reqId,
+		};
+		r.return(302, `https://accounts.google.com/o/oauth2/v2/auth?${lib.query.stringify(query)}`);
 
-	// 	r.log(`[authHandler] Redirected: error=${e}`);
-	// 	return;
-	// }
+		r.log(`[authHandler] Redirected: error=${e}`);
+		return;
+	}
 
 	// Check the user can access this application.
-	// if (!ruleFn(claims.email)) {
-	// 	printError(r, 403, `You cannot access this application. Email: ${claims.email}`);
-	// 	return;
-	// }
+	if (!ruleFn(claims.email)) {
+		printError(r, 403, `You cannot access this application. Email: ${claims.email}`);
+		return;
+	}
 
-	// // These variables below can read in nginx-configuration.
-	// r.variables["oidc_user"] = claims.user;
-	// r.variables["oidc_email"] = claims.email;
-	// r.variables["oidc_basic_auth"] = `${claims.user}:`.toUTF8().toString("base64");
+	// These variables below can read in nginx-configuration.
+	r.variables["oidc_user"] = claims.user;
+	r.variables["oidc_email"] = claims.email;
+	r.variables["oidc_basic_auth"] = `${claims.user}:`.toUTF8().toString("base64");
 
-	// r.internalRedirect("@upstream");
+	r.internalRedirect("@upstream");
 });
 
 export default {
