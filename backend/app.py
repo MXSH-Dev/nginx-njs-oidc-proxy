@@ -7,7 +7,8 @@ app = Flask(__name__)
 
 @app.route("/")
 def health():
-    return jsonify(status="green", message="success",headers=dict(request.headers)), 200
+    cookies = request.cookies.to_dict()
+    return jsonify(status="green", message="success", headers=dict(request.headers), cookies=cookies,values=request.values.to_dict()), 200
 
 if __name__ == '__main__':
     PROT = os.getenv("PORT", 9999)

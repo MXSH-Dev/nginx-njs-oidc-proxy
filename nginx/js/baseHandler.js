@@ -102,7 +102,19 @@ var callbackHandler3 = baseHandler(r => {
 
 		r.log(sr.responseBody)
 
-		r.return(302, "http://localhost:9999");
+		var token_fragments = (resp.access_token || "").split(".");
+
+		if (token_fragments.length !== 3) {
+				throw new Error(`invalid token: ${resp.access_token}`);
+			}
+
+		var claims = JSON.parse(String.bytesFrom(token_fragments[1], "base64url"));
+		r.log(JSON.stringify(claims));
+
+		r.headersOut['token'] = resp.access_token;
+		r.return(302, `http://localhost:9999?token=${resp.access_token}`);
+
+		// r.internalRedirect("@upstream");
 	});
 });
 

@@ -8,6 +8,8 @@ services:
       dockerfile: Dockerfile
     image: python-flask
     container_name: python-flask-demo
+    volumes:
+      - ./backend:/app
     ports:
       - "9999:9999"
 
